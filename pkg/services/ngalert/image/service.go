@@ -122,13 +122,11 @@ func (s *ScreenshotImageService) NewImage(ctx context.Context, r *models.AlertRu
 
 	dashboardUID := r.GetDashboardUID()
 	if dashboardUID == "" {
-		logger.Debug("Nothing to screenshot; rule does not reference a dashboard")
 		return nil, models.ErrNoDashboard
 	}
 
 	panelID := r.GetPanelID()
 	if panelID <= 0 {
-		logger.Debug("Nothing to screenshot; rule does not reference a panel")
 		return nil, models.ErrNoPanel
 	}
 

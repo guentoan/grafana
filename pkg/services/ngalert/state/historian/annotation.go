@@ -3,6 +3,7 @@ package historian
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -186,7 +187,11 @@ func (h *AnnotationBackend) recordAnnotations(ctx context.Context, panel *panelK
 	if panel != nil {
 		dashID, err := h.dashboards.getID(ctx, panel.orgID, panel.dashUID)
 		if err != nil {
-			logger.Error("Error getting dashboard for alert annotation", "dashboardUID", panel.dashUID, "error", err)
+			if errors.Is(err, dashboards.ErrDashboardNotFound) {
+				logger.Warn("Dashboard referenced by rule does not exist", "org", orgID, "dashboardUID", panel.dashUID)
+			} else {
+				logger.Error("Error getting dashboard for alert annotation", "dashboardUID", panel.dashUID, "error", err)
+			}
 			dashID = 0
 		}
 

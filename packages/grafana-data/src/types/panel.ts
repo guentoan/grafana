@@ -66,6 +66,8 @@ export interface PanelData {
 
   /** Contains the range from the request or a shifted time range if a request uses relative time */
   timeRange: TimeRange;
+
+  traceIds?: string[];
 }
 
 export interface PanelProps<T = any> {

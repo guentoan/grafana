@@ -175,6 +175,9 @@ func queryData(ctx context.Context, req *backend.QueryDataRequest, dsInfo *datas
 			queryRes.Error = err
 		} else {
 			queryRes.Frames = frames
+			// if rand.Float64() > 0.5 {
+			// 	queryRes.Error = fmt.Errorf("synthetic error happened")
+			// }
 		}
 
 		result.Responses[query.RefID] = queryRes

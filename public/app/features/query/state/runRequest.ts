@@ -88,6 +88,15 @@ export function processResponsePacket(packet: DataQueryResponse, state: RunningQ
     timeRange,
   };
 
+  const { traceIds } = packet;
+
+  const traceIdsFromState = state.panelData.traceIds ?? [];
+  const traceIdSet = new Set([...traceIdsFromState, ...(traceIds ?? [])]);
+
+  if (traceIdSet.size > 0) {
+    panelData.traceIds = Array.from(traceIdSet);
+  }
+
   return { packets, panelData };
 }
 

@@ -36,6 +36,8 @@ function renderError(error: DataQueryError) {
         <>
           {error.status && <>Status: {error.status}. Message: </>}
           {msg}
+          <br />
+          {error.traceId && <i>{error.traceId}</i>}
         </>
       );
     } else {

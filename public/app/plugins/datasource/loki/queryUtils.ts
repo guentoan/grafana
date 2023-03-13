@@ -350,6 +350,7 @@ export function combineResponses(currentResult: DataQueryResponse | null, newRes
   // we just choose the old error, if it exists,
   // otherwise the new error, if it exists.
   currentResult.error = currentResult.error ?? newResult.error;
+  currentResult.traceIds = [...(currentResult.traceIds ?? []), ...(newResult.traceIds ?? [])];
 
   return currentResult;
 }

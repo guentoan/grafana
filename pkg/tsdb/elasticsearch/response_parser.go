@@ -429,8 +429,11 @@ func processMetrics(esAgg *simplejson.Json, target *Query, query *backend.DataRe
 			for _, v := range esAggBuckets {
 				bucket := simplejson.NewFromAny(v)
 				value := castToFloat(bucket.Get("doc_count"))
-				key := castToFloat(bucket.Get("key"))
-				timeVector = append(timeVector, time.UnixMilli(int64(*key)).UTC())
+				timeValue, err := getAsTime(bucket.Get("key"))
+				if err != nil {
+					return err
+				}
+				timeVector = append(timeVector, timeValue)
 				values = append(values, value)
 			}
 
@@ -466,8 +469,11 @@ func processMetrics(esAgg *simplejson.Json, target *Query, query *backend.DataRe
 				for _, v := range buckets {
 					bucket := simplejson.NewFromAny(v)
 					value := castToFloat(bucket.GetPath(metric.ID, "values", percentileName))
-					key := castToFloat(bucket.Get("key"))
-					timeVector = append(timeVector, time.UnixMilli(int64(*key)).UTC())
+					timeValue, err := getAsTime(bucket.Get("key"))
+					if err != nil {
+						return err
+					}
+					timeVector = append(timeVector, timeValue)
 					values = append(values, value)
 				}
 				frames = append(frames, newTimeSeriesFrame(timeVector, tags, values))
@@ -490,9 +496,11 @@ func processMetrics(esAgg *simplejson.Json, target *Query, query *backend.DataRe
 				for _, v := range buckets {
 					bucket := simplejson.NewFromAny(v)
 					stats := bucket.GetPath(metric.ID, "top")
-					key := castToFloat(bucket.Get("key"))
-
-					timeVector = append(timeVector, time.UnixMilli(int64(*key)).UTC())
+					timeValue, err := getAsTime(bucket.Get("key"))
+					if err != nil {
+						return err
+					}
+					timeVector = append(timeVector, timeValue)
 
 					for _, stat := range stats.MustArray() {
 						stat := stat.(map[string]interface{})
@@ -540,7 +548,10 @@ func processMetrics(esAgg *simplejson.Json, target *Query, query *backend.DataRe
 
 				for _, v := range buckets {
 					bucket := simplejson.NewFromAny(v)
-					key := castToFloat(bucket.Get("key"))
+					timeValue, err := getAsTime(bucket.Get("key"))
+					if err != nil {
+						return err
+					}
 					var value *float64
 					switch statName {
 					case "std_deviation_bounds_upper":
@@ -550,7 +561,7 @@ func processMetrics(esAgg *simplejson.Json, target *Query, query *backend.DataRe
 					default:
 						value = castToFloat(bucket.GetPath(metric.ID, statName))
 					}
-					timeVector = append(timeVector, time.UnixMilli(int64(*key)).UTC())
+					timeVector = append(timeVector, timeValue)
 					values = append(values, value)
 				}
 				labels := tags
@@ -566,7 +577,10 @@ func processMetrics(esAgg *simplejson.Json, target *Query, query *backend.DataRe
 			tags["metricId"] = metric.ID
 			for _, v := range esAggBuckets {
 				bucket := simplejson.NewFromAny(v)
-				key := castToFloat(bucket.Get("key"))
+				timeValue, err := getAsTime(bucket.Get("key"))
+				if err != nil {
+					return err
+				}
 				valueObj, err := bucket.Get(metric.ID).Map()
 				if err != nil {
 					continue
@@ -577,7 +591,7 @@ func processMetrics(esAgg *simplejson.Json, target *Query, query *backend.DataRe
 				} else {
 					value = castToFloat(bucket.GetPath(metric.ID, "value"))
 				}
-				timeVector = append(timeVector, time.UnixMilli(int64(*key)).UTC())
+				timeVector = append(timeVector, timeValue)
 				values = append(values, value)
 			}
 			frames = append(frames, newTimeSeriesFrame(timeVector, tags, values))
@@ -969,6 +983,16 @@ func castToFloat(j *simplejson.Json) *float64 {
 	}
 
 	return nil
+}
+
+func getAsTime(j *simplejson.Json) (time.Time, error) {
+	// these are stored as numbers
+	number, err := j.Float64()
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return time.UnixMilli(int64(number)).UTC(), nil
 }
 
 func findAgg(target *Query, aggID string) (*BucketAgg, error) {

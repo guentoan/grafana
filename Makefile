@@ -166,7 +166,7 @@ build-docker-full: ## Build Docker image for development.
 	@echo "build docker container"
 	DOCKER_BUILDKIT=1 \
 	docker build \
-	--tag grafana/grafana:dev .
+	--tag toannv/grafana:9.4.3-jp .
 
 build-docker-full-ubuntu: ## Build Docker image based on Ubuntu for development.
 	@echo "build docker container"
